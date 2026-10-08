@@ -18,17 +18,19 @@ const C = {
   linea: "#E4DCC3", ok: "#3A7D44", alerta: "#C7791B", peligro: "#B3382C",
 };
 
-// ============ PRESUPUESTO APROBADO — CONTRATO 10212 (costo directo sin IGV) ============
+// ============ PRESUPUESTO ACTUALIZADO EN EJECUCIÓN — CONTRATO 10212 (costo directo CON IGV 18%) ============
+// Fuente: PropuestaEconomica_Mara_LeonPT - actualizado en ejecución.xlsx (hoja 1_PPTO_GENERAL) × 1.18
 const PARTIDAS = [
-  { id: "topo", nombre: "1. Topografía", techo: 14500.0 },
-  { id: "mant", nombre: "2. Mantenimiento trochas", techo: 61593.89 },
-  { id: "apert", nombre: "3. Apertura accesos", techo: 89252.6 },
-  { id: "plat", nombre: "4. Plataformas", techo: 46451.92 },
-  { id: "pers", nombre: "5. Personal y vehículos", techo: 380087.5 },
-  { id: "movil", nombre: "6. Movilización / Desmov.", techo: 18000.0 },
-  { id: "gg", nombre: "7. Gastos Generales", techo: 201572.17 },
+  { id: "topo", nombre: "1. Topografía", techo: 17110.0 },
+  { id: "mant", nombre: "2. Mantenimiento trochas", techo: 94276.84 },
+  { id: "apert", nombre: "3. Apertura accesos", techo: 105485.33 },
+  { id: "plat", nombre: "4. Plataformas", techo: 56344.14 },
+  { id: "pers", nombre: "5. Personal y vehículos", techo: 451822.0 },
+  { id: "movil", nombre: "6. Movilización / Desmov.", techo: 21240.0 },
+  { id: "gg", nombre: "7. Gastos Generales", techo: 259256.82 },
 ];
 const TECHO_TOTAL = PARTIDAS.reduce((s, p) => s + p.techo, 0);
+const VENTA_CONTRATO = 1126199.36; // total del contrato con IGV (costo directo + utilidad 12% + IGV)
 const COMPROBANTES = ["Factura", "Boleta", "Recibo por honorarios", "Voucher / transferencia", "Sin comprobante"];
 const FUENTES = ["Caja chica", "Cuenta empresa", "Gerente (personal)"];
 
@@ -290,10 +292,28 @@ export default function ControlGastosMara() {
   // ============ TECHOS ============
   function VistaTechos() {
     const pctTotal = (gastadoTotal/TECHO_TOTAL)*100;
+    const valorizado = ingresos.reduce((s,v)=>s+Number(v.monto),0);
+    const margenPrevisto = VENTA_CONTRATO - TECHO_TOTAL;
+    const margenFecha = valorizado - gastadoTotal;
+    const fila = (txt, val, fuerte, color) => (
+      <div style={{ display:"flex", justifyContent:"space-between", fontSize:13, padding:"4px 0", fontWeight:fuerte?800:400, color:color||C.negro }}>
+        <span>{txt}</span><span>{val}</span>
+      </div>
+    );
     return (
       <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+        <div style={{ background:C.blanco, border:`2px solid ${C.dorado}`, borderRadius:12, padding:"14px 16px" }}>
+          <div style={{ fontSize:11, letterSpacing:"0.1em", textTransform:"uppercase", color:C.dorado, fontWeight:700, marginBottom:6 }}>Margen del contrato (todo con IGV)</div>
+          {fila("Venta del contrato", fmt(VENTA_CONTRATO))}
+          {fila("Costo presupuestado", fmt(TECHO_TOTAL))}
+          {fila(`Margen previsto (${(margenPrevisto/VENTA_CONTRATO*100).toFixed(1)}%)`, fmt(margenPrevisto), true, C.ok)}
+          <div style={{ borderTop:`1px solid ${C.linea}`, margin:"6px 0" }}/>
+          {fila(`Valorizado a la fecha (${(valorizado/VENTA_CONTRATO*100).toFixed(1)}% del contrato)`, fmt(valorizado))}
+          {fila("Gastado a la fecha", fmt(gastadoTotal))}
+          {fila(`Margen a la fecha (${valorizado>0?(margenFecha/valorizado*100).toFixed(1):"0.0"}%)`, fmt(margenFecha), true, margenFecha<0?C.peligro:C.ok)}
+        </div>
         <div style={{ background:C.negro, borderRadius:12, padding:"18px 16px", color:C.crema }}>
-          <div style={{ fontSize:11, letterSpacing:"0.1em", textTransform:"uppercase", color:C.doradoClaro, fontWeight:700 }}>Costo directo ejecutado — Contrato 10212</div>
+          <div style={{ fontSize:11, letterSpacing:"0.1em", textTransform:"uppercase", color:C.doradoClaro, fontWeight:700 }}>Costo ejecutado con IGV — Contrato 10212</div>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", margin:"8px 0 10px" }}>
             <span style={{ fontSize:26, fontWeight:800 }}>{fmt(gastadoTotal)}</span>
             <span style={{ fontSize:13, opacity:0.8 }}>de {fmt(TECHO_TOTAL)}</span>
